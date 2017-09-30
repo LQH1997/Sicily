@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name = "javaTest" default ="test" basedir=".">
+	<property name="src.dir" value="src"/>
+	<property name="test.dir" value="test"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="war.dir" value="war"/>
+	<property name="class.dir" value="${war.dir}/classes"/>
+
+	<path id="compile.path">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+		<pathelement path="${class.dir}"/>
+	</path>
+
+	<target name="init">
+		<mkdir dir="${war.dir}"/>
+		<mkdir dir="${class.dir}"/>
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}"  destdir="${class.dir}" classpathref="compile.path"/>
+		<javac srcdir="${test.dir}" destdir="${class.dir}" classpathref="compile.path"/>
+	</target>
+
+	<target name="HelloWorld">
+		<java fork="true" failonerror="yes" classname="HelloWorld"/>
+	</target>
+
+	<target name="test" depends="compile">
+		<junit fork="true" haltonfailure="true" printsummary="true" showoutput="true">
+			<classpath refid="compile.path"/>
+			<test name="HelloWorldTest"/>
+		</junit>
+	</target>
+
+	<target name="clean">
+		<delete dir="${class.dir}"/>
+	</target>
+
+</project>
