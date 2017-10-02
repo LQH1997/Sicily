@@ -5,6 +5,8 @@
 
 void bitsCopy(bool *dataOut,bool *dataIn,int num);
 void bitToHex(char *dataOut,bool *dataIn,int num);
+void hexToBit(bool *dataOut,char *dataIn,int num);
+void bitToByte(char *dataOut,bool *dataIn,int num);
 void keyInBit(bool *keyOut, char* keyIn, int num);
 void BitToKey(char *keyOut, bool* keyIn, int num);
 void tableP(bool* dataOut, bool* dataIn, const char* table, int num);
@@ -24,31 +26,29 @@ int main() {
 	char publicText[8] = {0};
 	char textInHex[16] = {'a', 'b', 'c', 'd', 'e', 'f', 'g'};
 	char tempKey[8] = {0};
-	// printf("%c ", textInHex[1]);
-	// printf("Input your text\n");
-	gets(publicText);
-	//gets(temp);
-	gets(key);
-	// printf("Input your key\n");
-	//gets(key);
+	char encryptedText[8] = {0};
+	printf("Input your text\n");
+	//gets(publicText);
+	scanf("%s", publicText);
+	printf("Input your key\n");
+	scanf("%s", key);
+//	gets(key);
 	setKey(key);
-	// printf("aaaaa\n");
-	desEncrypt(textInHex, publicText);
-	// printf("%c ", textInHex[0]);
-	// printf("%c ", textInHex[1]);
-	// printf("%c ", textInHex[2]);
-	// printf("%c ", textInHex[3]);
-	// printf("%c ", textInHex[4]);
-	// printf("%c ", textInHex[5]);
-	// printf("%c ", textInHex[6]);
-	// printf("aaa:\n");
-	 for(i = 0; i < 16; i++) {
-	 	printf("%c", textInHex[i]);
+	desEncrypt(encryptedText, publicText);
+	 for(i = 0; i < 8; i++) {
+	 	printf("%c", encryptedText[i]);
 	 }
-	// desDecrypt(publicText, textInHex);
-	// for( i = 0; i < 8; i++) {
-	// 	printf("%c ", publicText[i]);
-	// }
+
+	 printf("\ninput your key\n");
+	 //gets(temp);
+	 scanf("%s", temp);
+	 setKey(temp);
+	 desDecrypt(publicText, encryptedText);
+	 for( i = 0; i < 8; i++) {
+	 	printf("%c", publicText[i]);
+	}
+	printf("\n");
+
 }
 
 void bitsCopy(bool *dataOut,bool *dataIn,int num) {
@@ -81,6 +81,29 @@ void keyInBit(bool *keyOut, char* keyIn, int num) {
 	for(i = 0; i < num; i++) {
 		keyOut[i]=(keyIn[i/8]>>(i%8))&0x01;   
 	}
+}
+
+void hexToBit(bool *dataOut,char *dataIn,int num) {
+	int i = 0;                        
+	for(i = 0; i < num; i++) {
+		if((dataIn[i/4])>'9') {
+			dataOut[i]=((dataIn[i/4]-'7')>>(i%4))&0x01;   			
+		}
+		else {
+			dataOut[i]=((dataIn[i/4]-'0')>>(i%4))&0x01; 	
+		} 
+	}	
+}
+
+void bitToByte(char *dataOut,bool *dataIn,int num) {
+	int i = 0;
+	for(i = 0; i < (num/8); i++) {
+		dataOut[i]=0;
+	} 
+	for(i = 0; i < num; i++) {
+		dataOut[i/8]|=dataIn[i]<<(i%8);	
+	}		
+
 }
 
 void circulate(bool *dataIn, int len, int num) {
@@ -150,5 +173,22 @@ void desEncrypt(char dataOut[8], char dataIn[8]) {
 		bitsCopy(leftText, temp, 32);       
 	}					
 	tableP(textBit,textBit,IPR_Table,64);
-	bitToHex(dataOut, textBit, 64);
+	bitToByte(dataOut, textBit, 64);
+}
+
+void desDecrypt(char dataOut[8], char dataIn[8]) {
+	int i = 0;
+	static bool textBit[64] = {0};
+	static bool temp[32] = {0};
+	static bool *leftText = &textBit[0], *rightText = &textBit[32];
+	keyInBit(textBit, dataIn, 64);
+	tableP(textBit, textBit, IP_Table, 64);
+	for(i = 15; i >=0; i--) {
+		bitsCopy(temp, leftText, 32);
+		textExpand(leftText, subkey[i]);
+		Xor(leftText, rightText, 32);
+		bitsCopy(rightText, temp, 32);
+	}
+	tableP(textBit, textBit, IPR_Table, 64);
+	bitToByte(dataOut, textBit, 64);
 }
